@@ -19,10 +19,11 @@ test_dev(int x, int y) {
 
 __global__ void
 test_kernel(int N, float* result) {
-    printf("hi\n");
     // compute overall index from position of thread in current block,
     // and given the block we are in
     int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    printf("hi: %d\n", index);
 
     if (index < N)
        result[index] = test_dev(index, -index+1);
@@ -34,7 +35,7 @@ mainCuda(int N, float* resultarray) {
     int totalBytes = sizeof(float) * N;
 
     // compute number of blocks and threads per block
-    const int threadsPerBlock = 512;
+    const int threadsPerBlock = 32;
     const int blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
 
     float* device_result;
