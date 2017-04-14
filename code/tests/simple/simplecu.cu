@@ -1,5 +1,5 @@
 /* Norman Ponte; Joey Fernau
- * warp divergence test
+ * annotation generation test
  */
 
 #include <stdio.h>
@@ -12,9 +12,17 @@
 
 extern float toBW(int bytes, float sec);
 
-__device__ int test_dev ( int x , int y , float j ) {
-  /* GENERATED */ printf("test_dev int %d int %d\n", x, y);
+__device__ int test_cond ( bool x , unsigned y , void* j ) {
+  if (j == NULL)
+      return y + 99;
+  else
+      if (x)
+          return (int)(unsigned) j;
+      else
+          return y - 99;
+}
 
+__device__ int test_dev ( int x , int y , float j ) {
   return x + y;
 }
 
@@ -24,8 +32,13 @@ test_kernel(int N, float* result) {
     // and given the block we are in
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (index < N)
+    if (index < N) {
        result[index] = test_dev(index, -index+1, 8.0f );
+       result[index] += test_cond(index % 2 == 0,
+                                  index % 10,
+                                  (index % 2 == 0)
+                                  ? NULL : (void*) 777);
+    }
 }
 
 void
