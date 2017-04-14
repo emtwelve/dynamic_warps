@@ -9,7 +9,7 @@
 #include "lib/CycleTimer.h"
 
 
-#define N 100000
+#define N 10000000
 
 // If we modify the program
 #define NO_OPT 0
@@ -24,8 +24,11 @@ __device__ int
 helper_func(int arg1, int arg2)
 {
   int retval = 0;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 100; i++) {
     retval += arg2;
+    retval *= 2;
+    if (i%5)
+      retval /= 2;
   }
   retval *= arg1;
   return retval;
@@ -57,8 +60,11 @@ opt_one() {
 __device__ int
 opt_two(int arg1, int arg2) {
   int retval = 0;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 100; i++) {
     retval += arg2;
+    retval *= 2;
+    if (i%5)
+      retval /= 2;
   }
   retval *= arg1;
   return retval;

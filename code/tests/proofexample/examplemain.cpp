@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 
-#define N 100000
+#define N 10000000
 
 void test(int* input1, int* input2, int* warpmap);
 int* generateInput(int which);
