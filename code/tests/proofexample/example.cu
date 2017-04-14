@@ -14,9 +14,6 @@
 // If we modify the program
 #define NO_OPT 1
 
-int* generateInput(int which);
-int* generateWarpMap();
-
 /// GPU CODE FOR THE REGULAR RUN ///
 ////////////////////////////////////
 
@@ -88,7 +85,7 @@ inner_kernel_opt(int* input1, int* input2, int* output, int* warp_remap)
 //////////////////////////////////////
 
 
-void test() {
+void test(int* input_1, int* input_2, int* warp_map) {
 
   int totalBytes = sizeof(int) * N;
 
@@ -105,10 +102,6 @@ void test() {
   cudaMalloc((void**) &device_in_two, N * sizeof(int));
   cudaMalloc((void**) &device_out, N * sizeof(int));
   cudaMalloc((void**) &device_warp_map, N * sizeof(int));
-
-  int* input_1 = generateInput(0);
-  int* input_2 = generateInput(1);
-  int* warp_map = generateWarpMap();
 
   // Copy over my generated array
   cudaMemcpy(device_in_one, input_1, N * sizeof(int), cudaMemcpyHostToDevice);
@@ -137,26 +130,4 @@ void test() {
   printf("Kernel time: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * kernelDuration, toBW(totalBytes, kernelDuration));
 
   cudaFree(device_warp_map); cudaFree(device_in_one); cudaFree(device_in_two); cudaFree(device_out);
-}
-
-/// Helper Functions for hardcoding arrays
-int* generateInput(int which) {
-  int* retarr = malloc(sizeof(int)*N);
-  for (int i = 0; i < N; i++) {
-    if ((i % 2) == which)
-      retarr[i] = 1;
-  }
-  return retarr;
-}
-
-int* generateWarpMap() {
-  int* warp_map = malloc(sizeof(int)*N);
-  int cur_index = 0;
-  for (int i = 0; i < N; i++) {
-    // If the lower half remap to upper half
-    if (i == (N/2)) cur_index = 1;
-    warp_map[i] = cur_index;
-    cur_index += 2;
-  }
-  return warp_map;
 }
