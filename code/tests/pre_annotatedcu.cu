@@ -1,4 +1,4 @@
-/* Norman Ponte; Joey Fernau
+* Norman Ponte; Joey Fernau
  * warp divergence test
  */
 
