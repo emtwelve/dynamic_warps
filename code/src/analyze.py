@@ -80,5 +80,6 @@ if __name__ == "__main__":
     #          argument 2 is called with 0 10 times, 1 9 times, etc...
     countsList = getCounts(call_logs)
 
-    print call_logs
+    for calllog in call_logs:
+        print calllog.tostr()
     print countsList
