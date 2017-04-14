@@ -14,6 +14,8 @@ extern float toBW(int bytes, float sec);
 
 __device__ int
 test_dev(int x, int y) {
+  /* GENERATED */ printf("test_dev int %d int %d\n", x, y);
+
   return x + y;
 }
 
@@ -22,8 +24,6 @@ test_kernel(int N, float* result) {
     // compute overall index from position of thread in current block,
     // and given the block we are in
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-    printf("hi: %d\n", index);
 
     if (index < N)
        result[index] = test_dev(index, -index+1);
