@@ -13,6 +13,8 @@
 extern float toBW(int bytes, float sec);
 
 __device__ int test_dev ( int x , int y , float j ) {
+
+	/* GENERATED */ printf("test_dev int %d int %d float %f \n", x, y, j);
   /* GENERATED */ printf("test_dev int %d int %d\n", x, y);
 
   return x + y;
