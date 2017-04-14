@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <getopt.h>
 
-void test();
+#define N 100000
+
+void test(int* input1, int* input2, int* warpmap);
 int* generateInput(int which);
 int* generateWarpMap();
 
@@ -28,7 +30,7 @@ int* generateInput(int which) {
 }
 
 int* generateWarpMap() {
-  int* warp_map = malloc(sizeof(int)*N);
+  int* warp_map = (int*)malloc(sizeof(int)*N);
   int cur_index = 0;
   for (int i = 0; i < N; i++) {
     if (i == (N/2)) cur_index = 1;

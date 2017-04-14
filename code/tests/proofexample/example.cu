@@ -9,10 +9,12 @@
 #include "lib/CycleTimer.h"
 
 
-#define N (100000)
+#define N 100000
 
 // If we modify the program
-#define NO_OPT 1
+#define NO_OPT 0
+
+extern float toBW(int bytes, float sec);
 
 /// GPU CODE FOR THE REGULAR RUN ///
 ////////////////////////////////////
