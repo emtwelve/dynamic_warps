@@ -12,6 +12,10 @@ class Param(object):
     def get_value(self):return self.value
     def get_name(self): return self.name
     def tostr(self):    return str(self.mytype) + " " + str(self.value) + " " + str(self.name)
+    def __repr__(self):
+        return self.tostr()
+    def __str__(self):
+        return self.tostr()
 
 class FnCallLog(object):
     def __init__(self, thr_idx, fn_name, argv):
@@ -43,13 +47,16 @@ class FnCallLog(object):
         return ans
 
 class FixedArgument(object):
-    def __init__(self, _fn_name, _arg_idx, _arg_id, _arg_count, _arg_name):
+    def __init__(self, _fn_name, _arg_idx, _arg_name, _arg_typ):
         self.fn_name = _fn_name;    self.arg_idx = _arg_idx
-        self.arg_id = _arg_id;      self.arg_count = _arg_count
-        self.arg_name = _arg_name
+        self.arg_values = []
+        self.arg_name = _arg_name;  self.arg_type = _arg_typ
+    def addValue(self, arg_value, arg_value_count):
+        self.arg_values += [(arg_value, arg_value_count)]
     def __str__(self):
         return str(self.fn_name) + " " + str(self.arg_idx) + " " + \
-               str(self.arg_id) + " " + str(self.arg_count) + " " + str(self.arg_name)
+               str(self.arg_name) + " " + str(self.arg_type) + " " + \
+               str(self.arg_values)
     def __repr__(self):
         return self.__str__()
 
@@ -58,6 +65,13 @@ def getArgumentName(fn_name, index, call_logs):
     #   because a specific function has the same call log parameters
     #   across all calls
     return call_logs[fn_name][0].params[index].name
+
+def getArgumentType(fn_name, index, call_logs):
+    # indexing into the call_logs's function's list can be anywhere
+    #   because a specific function has the same call log parameters
+    #   across all calls
+    return call_logs[fn_name][0].params[index].mytype
+
 
 def getCounts(call_logs):
 
@@ -68,16 +82,82 @@ def getCounts(call_logs):
     # counts[i] is param i's dictionary of value to count of value
     counts = [] # list of dictionaries
     for i in xrange(len_params):
-        counts += [Counter()]
+        counts += [[Counter(), None]]
 
     for fn_name in call_logs:
         for fnCallLog in call_logs[fn_name]:
             params = fnCallLog.getParams()
             for i in xrange(len(params)):
                 value = params[i].get_value()
-                counts[i][value] += 1
-
+                counts[i][0][value] += 1
+                counts[i][1] = params[i]
     return counts
+
+def initialize_gens(args_to_fix):
+    arg_fixed_functions_to_gen = {}
+    for fn_name in args_to_fix:
+        arg_fixed_functions_to_gen[fn_name] = {}
+
+    for fn_name, args in args_to_fix.items():
+        for arg in args:
+            arg_fixed_functions_to_gen[fn_name][arg] = {}
+
+    for fn_name, args in args_to_fix.items():
+        for arg in args:
+            for value, count in args_to_fix[fn_name][arg].arg_values:
+                arg_fixed_functions_to_gen[fn_name][arg][value] = []
+
+    return arg_fixed_functions_to_gen
+
+def generate_arg_fixed_functions(args_to_fix):
+    arg_fixed_functions_to_gen = initialize_gens(args_to_fix)
+
+    rest_of_function = \
+"""\tif (x) {
+\t\tfor (int i = 0; i < 10000; i++)
+\t\t\tresult += y - z;
+\t} else {
+\t\tfor (int i = 0; i < 10000; i++)
+\t\t\tresult += y - z;
+\t}
+\treturn result;
+}"""
+    for fn_name, args in args_to_fix.items():
+        for arg in args:
+            for value, count in args_to_fix[fn_name][arg].arg_values:
+                argFxdName = fn_name + "_" + arg + "_" + value
+                rest_of_function = "###REST_" + argFxdName
+                arg_fixed_functions_to_gen[fn_name][arg][value] = \
+                     "__device__ int " + \
+                     argFxdName + " ( " + \
+                     " int y , int z " + \
+                     " ) { \n\t" + \
+                     args_to_fix[fn_name][arg].arg_type + " " + \
+                     arg + " = " + \
+                     value + ";\n" + \
+                     rest_of_function
+
+
+    #print arg_fixed_functions_to_gen
+    for fn_name, args in args_to_fix.items():
+        for arg in args:
+            for value, count in args_to_fix[fn_name][arg].arg_values:
+                print "~~~~"
+                print arg_fixed_functions_to_gen[fn_name][arg][value]
+
+    return arg_fixed_functions_to_gen
+
+def generate_branching_function(args_to_fix):
+    branch_function = "__device__ int branch_" + fn_name + " ( bool x , int y , int z ) {\n"
+    branch_function += "\tswitch (x) {\n" # TODO: generalize
+    for arg in args_to_fix[fn_name]:
+        fixedArg = args_to_fix[fn_name][arg]
+        for val, cnt in fixedArg.arg_values:
+            branch_function += "\t\tcase " + str(val) + ":\n" + \
+                "\t\t\t" + fn_name + "_" + arg + "_" + str(val) + " ( y , z ) " + ";\n" + \
+                "\t\t\tbreak;\n"
+    branch_function += "\t}\n}"
+    return branch_function
 
 if __name__ == "__main__":
     if len(argv) != 2:
@@ -118,18 +198,32 @@ if __name__ == "__main__":
     print argCounts
 
     fn_name = "test"
-    args_to_fix = []
+    args_to_fix = {} # per function args_to_fix
     MIN_THRESHOLD = 0.45
     # Iterate over all Counter objects:
     for i in xrange(len(argCounts)):
-        arg_counter = argCounts[i]
+        arg_counter = argCounts[i][0]
         total = float(sum(arg_counter.values())) # total of all counts
         # Iterate over all (argument, argument count) pairs:
         for arg, count in arg_counter.items():
             arg_name = getArgumentName(fn_name, i, call_logs)
+            arg_type = getArgumentType(fn_name, i, call_logs)
             if count / total >= MIN_THRESHOLD:
-                args_to_fix += [FixedArgument(fn_name, i, arg, count, arg_name)]
+                if fn_name not in args_to_fix:
+                    args_to_fix[fn_name] = {}
 
-    # 
-    for arg_to_fix in args_to_fix:
+                if arg_name not in args_to_fix[fn_name]:
+                    fixedArg = FixedArgument(fn_name, i, arg_name, arg_type)
+                    args_to_fix[fn_name][arg_name] = fixedArg
+
+                args_to_fix[fn_name][arg_name].addValue(arg, count)
+
+            else:
+                # TODO: add to nonfixed arguments list
+                pass
+
+    print args_to_fix
+    arg_fixed_functions = generate_arg_fixed_functions(args_to_fix)
+    branch_function = generate_branching_function(args_to_fix)
+    print branch_function
 
