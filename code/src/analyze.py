@@ -149,7 +149,8 @@ def generate_branching_function(fn_name, args_to_fix):
         for val, cnt in fixedArg.arg_values:
             branch_function += "\t\tcase " + str(val) + ":\n" + \
                 "\t\t\treturn " + fn_name + "_" + arg + "_" + str(val) + " ( y , z ) " + ";\n"
-    branch_function += "\t}\n}"
+    branch_function += "\t}\n\tint *asdffdsa12344321 = NULL;\n\t" + \
+                       "return " + "(int) " + "*asdffdsa12344321;" + "\n}"
     return branch_function
 
 def analyze(fname):

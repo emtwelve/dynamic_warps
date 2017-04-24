@@ -43,6 +43,8 @@ __device__ int branch_test ( bool x , int y , int z ) {
 		case 0:
 			return test_x_0 ( y , z ) ;
 	}
+	int *asdffdsa12344321 = NULL;
+	return (int) *asdffdsa12344321;
 }
 
 __global__ void
