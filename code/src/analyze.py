@@ -139,30 +139,28 @@ def generate_arg_fixed_functions(args_to_fix):
 
 
     #print arg_fixed_functions_to_gen
+    """
     for fn_name, args in args_to_fix.items():
         for arg in args:
             for value, count in args_to_fix[fn_name][arg].arg_values:
                 print "~~~~"
                 print arg_fixed_functions_to_gen[fn_name][arg][value]
+    """
 
     return arg_fixed_functions_to_gen
 
-def generate_branching_function(args_to_fix):
+def generate_branching_function(fn_name, args_to_fix):
     branch_function = "__device__ int branch_" + fn_name + " ( bool x , int y , int z ) {\n"
     branch_function += "\tswitch (x) {\n" # TODO: generalize
     for arg in args_to_fix[fn_name]:
         fixedArg = args_to_fix[fn_name][arg]
         for val, cnt in fixedArg.arg_values:
             branch_function += "\t\tcase " + str(val) + ":\n" + \
-                "\t\t\t" + fn_name + "_" + arg + "_" + str(val) + " ( y , z ) " + ";\n" + \
-                "\t\t\tbreak;\n"
+                "\t\t\treturn " + fn_name + "_" + arg + "_" + str(val) + " ( y , z ) " + ";\n"
     branch_function += "\t}\n}"
     return branch_function
 
-if __name__ == "__main__":
-    if len(argv) != 2:
-        print "Usage: ./analyze.py <log file>"
-    fname = argv[1]
+def analyze(fname):
     print "Reading ", fname
     assert fname.split('.')[1] == 'log'
     fd = open(fname, 'r')
@@ -198,6 +196,7 @@ if __name__ == "__main__":
     print argCounts
 
     fn_name = "test"
+    num_argfixed_fns = Counter()
     args_to_fix = {} # per function args_to_fix
     MIN_THRESHOLD = 0.45
     # Iterate over all Counter objects:
@@ -217,13 +216,19 @@ if __name__ == "__main__":
                     args_to_fix[fn_name][arg_name] = fixedArg
 
                 args_to_fix[fn_name][arg_name].addValue(arg, count)
-
+                num_argfixed_fns[fn_name] += 1
             else:
                 # TODO: add to nonfixed arguments list
                 pass
 
-    print args_to_fix
+    #print args_to_fix
     arg_fixed_functions = generate_arg_fixed_functions(args_to_fix)
-    branch_function = generate_branching_function(args_to_fix)
-    print branch_function
+    branch_function = generate_branching_function(fn_name, args_to_fix)
+    #print branch_function
+    return branch_function, arg_fixed_functions, num_argfixed_fns
 
+if __name__ == "__main__":
+    if len(argv) != 2:
+        print "Usage: ./analyze.py <log file>"
+    fname = argv[1]
+    analyze(fname)

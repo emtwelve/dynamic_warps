@@ -13,4 +13,5 @@
 
 #./simple > log_simple.log
 
-../../src/analyze.py log_simple.log
+#../../src/analyze.py log_simple.log
+../../src/codegen_opt.py simplecu.cu
