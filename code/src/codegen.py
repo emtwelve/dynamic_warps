@@ -35,9 +35,11 @@ def add_call_logger(i, lines):
                 newline += 'void* %p '
             elif tokens[j] == 'bool':
                 newline += 'bool %u '
+            newline += tokens[j+1] + ' ' # add parameter name
             params += ", " + tokens[j+1]
 
     newline += '\\n"' + params + ");\n"
+    print "YOYOYOY\n", newline
     return list(newline)
 
 

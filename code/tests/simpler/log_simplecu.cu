@@ -14,7 +14,7 @@ extern float toBW(int bytes, float sec);
 
 __device__ int test ( bool x , int y , int z ) {
 
-	/* GENERATED */ printf("CALL_LOG %d test bool %u int %d int %d \n", blockIdx.x * blockDim.x + threadIdx.x, x, y, z);
+	/* GENERATED */ printf("CALL_LOG %d test bool %u x int %d y int %d z \n", blockIdx.x * blockDim.x + threadIdx.x, x, y, z);
   int result = 0;
   if (x) {
     for (int i = 0; i < 10000; i++)
