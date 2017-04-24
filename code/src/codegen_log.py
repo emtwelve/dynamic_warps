@@ -11,7 +11,7 @@ def add_call_logger(i, lines):
     dev = tokens[0]
     typ = tokens[1]
     fn_name = tokens[2]
-    print dev, typ, fn_name
+
     assert(typ in ['int', 'void', 'char', 'float'])
     assert(dev == "__device__")
 
@@ -39,13 +39,14 @@ def add_call_logger(i, lines):
             params += ", " + tokens[j+1]
 
     newline += '\\n"' + params + ");\n"
-    print "YOYOYOY\n", newline
+
     return list(newline)
 
 
 if __name__ == "__main__":
+    print "Beginning codegen_log.py"
     if len(argv) != 2:
-        print "Usage: ./codegen.py <cuda file>"
+        print "Usage: ./codegen_log.py <cuda file>"; assert(False)
     fname = argv[1]
     print "Annotating ", fname
     fd = open(fname, 'r')

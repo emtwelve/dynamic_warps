@@ -15,17 +15,17 @@ def removeEnd(s, delim):
 
 if __name__ == "__main__":
     if len(argv) != 2:
-        print "Usage: ./codegen.py <cuda file>"
+        print "Usage: ./codegen.py <cuda file>"; assert(False)
     fname = argv[1]
     print "Creating optimized ", fname
     fd = open(fname, 'r')
 
     # :-5 slicing to chop off the cu.cu part of the filename
     log_file = "log_" + fname[:-5] + ".log"
-    print log_file
+
     branch_function, arg_fixed_functions, num_argfixed_fns = analyze(log_file)
-    print arg_fixed_functions
-    print branch_function
+    
+    print "Beginning codegen_opt.py"
 
     lines = fd.readlines()
 

@@ -45,6 +45,8 @@ class FnCallLog(object):
             ans += param.tostr() + ","
         ans += ")"
         return ans
+    def __repr__(self): return self.tostr()
+    def __str__(self): return self.tostr()
 
 class FixedArgument(object):
     def __init__(self, _fn_name, _arg_idx, _arg_name, _arg_typ):
@@ -112,16 +114,6 @@ def initialize_gens(args_to_fix):
 def generate_arg_fixed_functions(args_to_fix):
     arg_fixed_functions_to_gen = initialize_gens(args_to_fix)
 
-    rest_of_function = \
-"""\tif (x) {
-\t\tfor (int i = 0; i < 10000; i++)
-\t\t\tresult += y - z;
-\t} else {
-\t\tfor (int i = 0; i < 10000; i++)
-\t\t\tresult += y - z;
-\t}
-\treturn result;
-}"""
     for fn_name, args in args_to_fix.items():
         for arg in args:
             for value, count in args_to_fix[fn_name][arg].arg_values:
@@ -161,6 +153,7 @@ def generate_branching_function(fn_name, args_to_fix):
     return branch_function
 
 def analyze(fname):
+    print "Beginning analyze.py"
     print "Reading ", fname
     assert fname.split('.')[1] == 'log'
     fd = open(fname, 'r')
@@ -189,10 +182,14 @@ def analyze(fname):
     #          argument 2 is called with 0 10 times, 1 9 times, etc...
     argCounts = getCounts(call_logs)
 
+    # The following prints out the call log:
+    """
     for fn_name, calllogs in call_logs.items():
         print fn_name
         for cl in calllogs:
-            print cl.tostr()
+            print cl
+    """
+    # The following prints out the per argument value count:
     print argCounts
 
     fn_name = "test"
