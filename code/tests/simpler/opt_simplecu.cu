@@ -12,9 +12,8 @@
 
 extern float toBW(int bytes, float sec);
 
-__device__ int test ( bool x , int y , int z ) {
-
-	/* GENERATED */ printf("CALL_LOG %d test bool %u x int %d y int %d z \n", blockIdx.x * blockDim.x + threadIdx.x, x, y, z);
+__device__ int test_x_1 (  int y , int z  ) { 
+	bool x = 1;
   int result = 0;
   if (x) {
     for (int i = 0; i < 10000; i++)
@@ -25,6 +24,28 @@ __device__ int test ( bool x , int y , int z ) {
   }
   return result;
 }
+__device__ int test_x_0 (  int y , int z  ) { 
+	bool x = 0;
+  int result = 0;
+  if (x) {
+    for (int i = 0; i < 10000; i++)
+      result += y - z;
+  } else {
+    for (int i = 0; i < 10000; i++)
+      result += y - z;
+  }
+  return result;
+}
+__device__ int branch_test ( bool x , int y , int z ) {
+	switch (x) {
+		case 1:
+			return test_x_1 ( y , z ) ;
+		case 0:
+			return test_x_0 ( y , z ) ;
+	}
+	int *asdffdsa12344321 = NULL;
+	return (int) *asdffdsa12344321;
+}
 
 __global__ void
 test_kernel(int N, float* result) {
@@ -33,7 +54,7 @@ test_kernel(int N, float* result) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index < N) {
-       result[index] = test(index % 2 == 0, index % 13, index % 7);
+       result[index] = branch_test(index % 2 == 0, index % 13, index % 7);
     }
 }
 
