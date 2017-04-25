@@ -21,9 +21,12 @@ if __name__ == "__main__":
     fd = open(fname, 'r')
 
     # :-5 slicing to chop off the cu.cu part of the filename
+    #   For example simplecu.cu gets converted to log_simple.log:
     log_file = "log_" + fname[:-5] + ".log"
 
-    branch_function, arg_fixed_functions, num_argfixed_fns = analyze(log_file)
+    # Obtain the actual branch function to write to the opt_<filename>cu.cu file,
+    #   and the arg_fixed functions.
+    branch_function, arg_fixed_functions, warp_rescheduler = analyze(log_file)
     
     print "Beginning codegen_opt.py"
 
