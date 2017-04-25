@@ -1,16 +1,20 @@
-EXECUTABLE := simple
+FOLDER     := tests/$(TEST)
 
-CU_FILES   := example.cu
+EXECUTABLE := $(FOLDER)/$(TEST) $(FOLDER)/log_$(TEST) $(FOLDER)/opt_$(TEST)
+
+CU_FILES   := $(FOLDER)/$(TEST)cu.cu
 
 CU_DEPS    :=
 
-CC_FILES   := examplemain.cpp
+CC_FILES   := $(FOLDER)/$(TEST).cpp
+
+EXTRA      := $(FOLDER)/*.log $(FOLDER)/log_* $(FOLDER)/opt_*
 
 ###########################################################
 
 ARCH=$(shell uname | sed -e 's/-.*//g')
 
-OBJDIR=objs
+OBJDIR=$(FOLDER)/objs
 CXX=g++ -m64
 CXXFLAGS=-O3 -Wall
 ifeq ($(ARCH), Darwin)
@@ -24,7 +28,7 @@ NVCC=nvcc
 NVCCFLAGS=-O3 -m64 --gpu-architecture compute_35
 
 
-OBJS=$(OBJDIR)/example.o  $(OBJDIR)/examplemain.o
+OBJS=$(OBJDIR)/simple.o  $(OBJDIR)/simplecu.o
 
 
 .PHONY: dirs clean
@@ -35,13 +39,13 @@ dirs:
 		mkdir -p $(OBJDIR)/
 
 clean:
-		rm -rf $(OBJDIR) *.ppm *~ $(EXECUTABLE)
+		rm -rf $(OBJDIR) *.ppm *~ $(EXECUTABLE) $(EXTRA)
 
 $(EXECUTABLE): dirs $(OBJS)
 		$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
-$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.o: $(FOLDER)/%.cpp
 		$(CXX) $< $(CXXFLAGS) -c -o $@
 
-$(OBJDIR)/%.o: %.cu
+$(OBJDIR)/%.o: $(FOLDER)/%.cu
 		$(NVCC) $< $(NVCCFLAGS) -c -o $@
