@@ -87,7 +87,22 @@ class FixedArgument(object):
     def __repr__(self):
         return self.__str__()
 
-
+class NotFixedArgument(object):
+    """ Class to represent a given argument that will not be fixed.  Simliar
+        to a FixedArgument except no values list.
+    """
+    def __init__(self, _fn_name, _arg_idx, _arg_name, _arg_typ):
+        # fn_name: the name of the device function
+        # arg_idx: the parameter position into the function (0,1,2,...)
+        # arg_name: the name of the parameter
+        # arg_typ: the type of the parameter
+        self.fn_name = _fn_name;    self.arg_idx = _arg_idx
+        self.arg_name = _arg_name;  self.arg_type = _arg_typ
+    def __str__(self):
+        return str(self.fn_name) + " " + str(self.arg_idx) + " " + \
+               str(self.arg_name) + " " + str(self.arg_type)
+    def __repr__(self):
+        return self.__str__()
 
 def getArgumentName(fn_name, index, call_logs):
     # indexing into the call_logs's function's list can be anywhere
@@ -152,7 +167,18 @@ def initialize_gens(args_to_fix):
 
     return arg_fixed_functions_to_gen
 
-def generate_arg_fixed_functions(args_to_fix):
+def not_fixedArgStringGen(fn_name, args_no_fix, include_type):
+    res = ""
+    var_to_notFixedArg = args_no_fix[fn_name]
+    for var, not_fixedArg in var_to_notFixedArg.items():
+        if include_type:
+            res += " " + not_fixedArg.arg_type + " " + \
+                         not_fixedArg.arg_name + " ,"
+        else:
+            res += " " + not_fixedArg.arg_name + " ,"
+    return res[:-1] # remove last comma
+
+def generate_arg_fixed_functions(args_to_fix, args_no_fix):
     # Initialize empty data structure (a dictionary-dictionary-list):
     #   It maps a function name to a dictionary D, where
     #   D maps an argument name to a list L, where
@@ -173,7 +199,7 @@ def generate_arg_fixed_functions(args_to_fix):
                 arg_fixed_functions_to_gen[fn_name][arg][value] = \
                      "__device__ int " + \
                      argFxdName + " ( " + \
-                     " int y , int z " + \
+                     not_fixedArgStringGen(fn_name, args_no_fix, 1) + \
                      " ) { \n\t" + \
                      args_to_fix[fn_name][arg].arg_type + " " + \
                      arg + " = " + \
@@ -191,7 +217,7 @@ def generate_arg_fixed_functions(args_to_fix):
 
     return arg_fixed_functions_to_gen
 
-def generate_branching_function(fn_name, args_to_fix):
+def generate_branching_function(fn_name, args_to_fix, args_no_fix):
     # Function prolog: TODO: generalize the input parameters:
     branch_function = "__device__ int branch_" + fn_name + " ( bool x , int y , int z ) {\n"
     
@@ -200,9 +226,9 @@ def generate_branching_function(fn_name, args_to_fix):
     for arg in args_to_fix[fn_name]:
         fixedArg = args_to_fix[fn_name][arg]
         for val, cnt, _ in fixedArg.arg_values:
-            # TODO: generalize the non-fixed arguments the arg_fixed functions take in
             branch_function += "\t\tcase " + str(val) + ":\n" + \
-                "\t\t\treturn " + fn_name + "_" + arg + "_" + str(val) + " ( y , z ) " + ";\n"
+                "\t\t\treturn " + fn_name + "_" + arg + "_" + str(val) + \
+                " ( " + not_fixedArgStringGen(fn_name, args_no_fix, 0) + " ) " + ";\n"
 
     # Failure case and function epilog:
     branch_function += "\t}\n\tint *asdffdsa12344321 = NULL;\n\t" + \
@@ -288,7 +314,8 @@ def analyze(fname):
 
     fn_name = "test"
     num_argfixed_fns = Counter() # Not used at the moment
-    args_to_fix = {} # per function args_to_fix
+    args_to_fix = {} # per function args to fix
+    args_no_fix = {} # per function args not to fix
     MIN_THRESHOLD = 0.45
     # Iterate over all Counter objects:
     for i in xrange(len(argCounts)):
@@ -312,11 +339,21 @@ def analyze(fname):
                 num_argfixed_fns[fn_name] += 1
             else:
                 # TODO: add to nonfixed arguments list
-                pass
+                if fn_name not in args_no_fix:
+                    args_no_fix[fn_name] = {}
+                if arg_name not in args_no_fix[fn_name]:
+                    not_fixedArg = NotFixedArgument(fn_name, i, arg_name, arg_type)
+                    args_no_fix[fn_name][arg_name] = not_fixedArg
+                assert(args_no_fix[fn_name][arg_name].arg_name == arg_name)
+                assert(args_no_fix[fn_name][arg_name].fn_name == fn_name)
+                assert(args_no_fix[fn_name][arg_name].arg_type == arg_type)
+
+    print "Arguments not to fix:"
+    print args_no_fix
 
     warp_rescheduler = generate_warp_rescheduler(args_to_fix)
-    arg_fixed_functions = generate_arg_fixed_functions(args_to_fix)
-    branch_function = generate_branching_function(fn_name, args_to_fix)
+    arg_fixed_functions = generate_arg_fixed_functions(args_to_fix, args_no_fix)
+    branch_function = generate_branching_function(fn_name, args_to_fix, args_no_fix)
 
     print "Arguments to fix:"
     print args_to_fix
