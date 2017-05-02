@@ -1,0 +1,451 @@
+0 0
+1 0
+2 0
+3 0
+4 0
+5 0
+6 0
+7 0
+8 0
+9 0
+10 0
+11 0
+12 0
+13 0
+14 0
+15 0
+16 0
+17 0
+18 0
+19 0
+20 0
+21 0
+22 0
+23 0
+24 0
+25 0
+26 0
+27 0
+28 0
+29 0
+30 0
+31 0
+32 0
+33 0
+34 0
+35 0
+36 0
+37 0
+38 0
+39 0
+40 0
+41 0
+42 0
+43 0
+44 0
+45 0
+46 0
+47 0
+48 0
+49 0
+50 0
+51 0
+52 0
+53 0
+54 0
+55 0
+56 0
+57 0
+58 0
+59 0
+60 0
+61 0
+62 0
+63 0
+0 1
+1 1
+2 1
+3 1
+4 1
+5 1
+6 1
+7 1
+8 1
+9 1
+10 1
+11 1
+12 1
+13 1
+14 1
+15 1
+16 1
+17 1
+18 1
+19 1
+20 1
+21 1
+22 1
+23 1
+24 1
+25 1
+26 1
+27 1
+28 1
+29 1
+30 1
+31 1
+32 1
+33 1
+34 1
+35 1
+36 1
+37 1
+38 1
+39 1
+40 1
+41 1
+42 1
+43 1
+44 1
+45 1
+46 1
+47 1
+48 1
+49 1
+50 1
+51 1
+52 1
+53 1
+54 1
+55 1
+56 1
+57 1
+58 1
+59 1
+60 1
+61 1
+62 1
+63 1
+CALL_LOG 32 test int 0 x int 6 y int 4 z 
+CALL_LOG 33 test int 1 x int 7 y int 5 z 
+CALL_LOG 34 test int 2 x int 8 y int 6 z 
+CALL_LOG 35 test int 3 x int 9 y int 0 z 
+CALL_LOG 36 test int 0 x int 10 y int 1 z 
+CALL_LOG 37 test int 1 x int 11 y int 2 z 
+CALL_LOG 38 test int 2 x int 12 y int 3 z 
+CALL_LOG 39 test int 3 x int 0 y int 4 z 
+CALL_LOG 40 test int 0 x int 1 y int 5 z 
+CALL_LOG 41 test int 1 x int 2 y int 6 z 
+CALL_LOG 42 test int 2 x int 3 y int 0 z 
+CALL_LOG 43 test int 3 x int 4 y int 1 z 
+CALL_LOG 44 test int 0 x int 5 y int 2 z 
+CALL_LOG 45 test int 1 x int 6 y int 3 z 
+CALL_LOG 46 test int 2 x int 7 y int 4 z 
+CALL_LOG 47 test int 3 x int 8 y int 5 z 
+CALL_LOG 48 test int 0 x int 9 y int 6 z 
+CALL_LOG 49 test int 1 x int 10 y int 0 z 
+CALL_LOG 50 test int 2 x int 11 y int 1 z 
+CALL_LOG 51 test int 3 x int 12 y int 2 z 
+CALL_LOG 52 test int 0 x int 0 y int 3 z 
+CALL_LOG 53 test int 1 x int 1 y int 4 z 
+CALL_LOG 54 test int 2 x int 2 y int 5 z 
+CALL_LOG 55 test int 3 x int 3 y int 6 z 
+CALL_LOG 56 test int 0 x int 4 y int 0 z 
+CALL_LOG 57 test int 1 x int 5 y int 1 z 
+CALL_LOG 58 test int 2 x int 6 y int 2 z 
+CALL_LOG 59 test int 3 x int 7 y int 3 z 
+CALL_LOG 60 test int 0 x int 8 y int 4 z 
+CALL_LOG 61 test int 1 x int 9 y int 5 z 
+CALL_LOG 62 test int 2 x int 10 y int 6 z 
+CALL_LOG 63 test int 3 x int 11 y int 0 z 
+CALL_LOG 0 test int 0 x int 0 y int 0 z 
+CALL_LOG 1 test int 1 x int 1 y int 1 z 
+CALL_LOG 2 test int 2 x int 2 y int 2 z 
+CALL_LOG 3 test int 3 x int 3 y int 3 z 
+CALL_LOG 4 test int 0 x int 4 y int 4 z 
+CALL_LOG 5 test int 1 x int 5 y int 5 z 
+CALL_LOG 6 test int 2 x int 6 y int 6 z 
+CALL_LOG 7 test int 3 x int 7 y int 0 z 
+CALL_LOG 8 test int 0 x int 8 y int 1 z 
+CALL_LOG 9 test int 1 x int 9 y int 2 z 
+CALL_LOG 10 test int 2 x int 10 y int 3 z 
+CALL_LOG 11 test int 3 x int 11 y int 4 z 
+CALL_LOG 12 test int 0 x int 12 y int 5 z 
+CALL_LOG 13 test int 1 x int 0 y int 6 z 
+CALL_LOG 14 test int 2 x int 1 y int 0 z 
+CALL_LOG 15 test int 3 x int 2 y int 1 z 
+CALL_LOG 16 test int 0 x int 3 y int 2 z 
+CALL_LOG 17 test int 1 x int 4 y int 3 z 
+CALL_LOG 18 test int 2 x int 5 y int 4 z 
+CALL_LOG 19 test int 3 x int 6 y int 5 z 
+CALL_LOG 20 test int 0 x int 7 y int 6 z 
+CALL_LOG 21 test int 1 x int 8 y int 0 z 
+CALL_LOG 22 test int 2 x int 9 y int 1 z 
+CALL_LOG 23 test int 3 x int 10 y int 2 z 
+CALL_LOG 24 test int 0 x int 11 y int 3 z 
+CALL_LOG 25 test int 1 x int 12 y int 4 z 
+CALL_LOG 26 test int 2 x int 0 y int 5 z 
+CALL_LOG 27 test int 3 x int 1 y int 6 z 
+CALL_LOG 28 test int 0 x int 2 y int 0 z 
+CALL_LOG 29 test int 1 x int 3 y int 1 z 
+CALL_LOG 30 test int 2 x int 4 y int 2 z 
+CALL_LOG 31 test int 3 x int 5 y int 3 z 
+0 2
+1 2
+2 2
+3 2
+4 2
+5 2
+6 2
+7 2
+8 2
+9 2
+10 2
+11 2
+12 2
+13 2
+14 2
+15 2
+16 2
+17 2
+18 2
+19 2
+20 2
+21 2
+22 2
+23 2
+24 2
+25 2
+26 2
+27 2
+28 2
+29 2
+30 2
+31 2
+32 2
+33 2
+34 2
+35 2
+36 2
+37 2
+38 2
+39 2
+40 2
+41 2
+42 2
+43 2
+44 2
+45 2
+46 2
+47 2
+48 2
+49 2
+50 2
+51 2
+52 2
+53 2
+54 2
+55 2
+56 2
+57 2
+58 2
+59 2
+60 2
+61 2
+62 2
+63 2
+32 3
+36 3
+40 3
+44 3
+48 3
+52 3
+56 3
+60 3
+0 3
+4 3
+8 3
+12 3
+16 3
+20 3
+24 3
+28 3
+33 4
+37 4
+41 4
+45 4
+49 4
+53 4
+57 4
+61 4
+1 4
+5 4
+9 4
+13 4
+17 4
+21 4
+25 4
+29 4
+34 5
+38 5
+42 5
+46 5
+50 5
+54 5
+58 5
+62 5
+2 5
+6 5
+10 5
+14 5
+18 5
+22 5
+26 5
+30 5
+35 6
+39 6
+43 6
+47 6
+51 6
+55 6
+59 6
+63 6
+3 6
+7 6
+11 6
+15 6
+19 6
+23 6
+27 6
+31 6
+32 7
+33 7
+34 7
+35 7
+36 7
+37 7
+38 7
+39 7
+40 7
+41 7
+42 7
+43 7
+44 7
+45 7
+46 7
+47 7
+48 7
+49 7
+50 7
+51 7
+52 7
+53 7
+54 7
+55 7
+56 7
+57 7
+58 7
+59 7
+60 7
+61 7
+62 7
+63 7
+0 7
+1 7
+2 7
+3 7
+4 7
+5 7
+6 7
+7 7
+8 7
+9 7
+10 7
+11 7
+12 7
+13 7
+14 7
+15 7
+16 7
+17 7
+18 7
+19 7
+20 7
+21 7
+22 7
+23 7
+24 7
+25 7
+26 7
+27 7
+28 7
+29 7
+30 7
+31 7
+32 8
+33 8
+34 8
+35 8
+36 8
+37 8
+38 8
+39 8
+40 8
+41 8
+42 8
+43 8
+44 8
+45 8
+46 8
+47 8
+48 8
+49 8
+50 8
+51 8
+52 8
+53 8
+54 8
+55 8
+56 8
+57 8
+58 8
+59 8
+60 8
+61 8
+62 8
+63 8
+0 8
+1 8
+2 8
+3 8
+4 8
+5 8
+6 8
+7 8
+8 8
+9 8
+10 8
+11 8
+12 8
+13 8
+14 8
+15 8
+16 8
+17 8
+18 8
+19 8
+20 8
+21 8
+22 8
+23 8
+24 8
+25 8
+26 8
+27 8
+28 8
+29 8
+30 8
+31 8
+Kernel time: 1.200 ms		[0.000 GB/s]
+Overall time: 1.355 ms		[0.000 GB/s]
+{ 0, 20000, 40000, 10000, 0, 100000, 360000, -10000, 70000, 110000, 300000, 20000, 70000, 60000, 0, 20000, 10000, 70000, 200000, 10000, 10000, 80000, 90000, 50000, 80000, 160000, 0, 0, 20000, 40000, 80000, 10000, 20000, 120000, 480000, -10000, 90000, 130000, 360000, 0, -40000, 80000, 0, 40000, 30000, 90000, 280000, 10000, 30000, 100000, 110000, 60000, -30000, 50000, 100000, 0, 40000, 60000, 120000, 20000, 40000, 140000, 600000, -10000,  }

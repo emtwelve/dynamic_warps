@@ -66,7 +66,6 @@ void create_warp_map(int** input_array, int* result_array, int N, int num_block)
     // Until I have filled all of my output array
     while (num_mapped < N) {
 
-        printf("Made a warp\n");
         cudaMemset(device_likeness, 0, totalBytes);
         // Find argument matches based on an index
         find_likeness<<<blocks, threadsPerBlock>>>(device_input_array, device_likeness, cur_index, num_block, N);
