@@ -20,9 +20,9 @@ g++ -std=c++0x -m64 -O3 -Wall -o remap_warp objs/warp_map.o  objs/warp_mapcu.o -
 
 echo -e "\e[0;49;96m" # Cyan
 echo "Run unoptimized code"
-nvcc unopt_$1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/unopt_$1.o
-g++ -m64 -O3 -Wall -o unopt_$1 objs/unopt_$1.o -L/usr/local/cuda/lib64/ -lcudart
-./unopt_$1
+nvcc $1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/$1.o
+g++ -m64 -O3 -Wall -o $1 objs/$1.o -L/usr/local/cuda/lib64/ -lcudart
+./$1
 
 #echo -e "\e[0;49;94m" # Teal
 #echo "Run optimized code"

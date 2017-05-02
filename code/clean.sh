@@ -4,4 +4,4 @@ rm log.csv
 rm anno_simple
 rm remap_warp
 rm warp.log
-rm unopt_simple
+rm simple
