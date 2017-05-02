@@ -5,12 +5,9 @@
 //#include "llvm/Module.h"
 // /afs/cs.cmu.edu/user/fp/courses/15411-f08/llvm
 // /afs/cs.cmu.edu/user/fp/courses/15411-f08/llvm/include
-#include "llvm/Pass.h"
-#include "llvm/Type.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
-#include "llvm/Support/InstVisitor.h"
-#include "llvm/Constants.h"
+#include "llvm/lib/Pass.h"
+#include "llvm/lib/IR/Function.h"
+#include "llvm/lib/Support/raw_ostream.h"
 
 
 

@@ -2,6 +2,7 @@
 
 from sys import argv
 from collections import Counter, defaultdict
+import dwr_util
 
 class Param(object):
     def __init__(self): pass
@@ -117,35 +118,32 @@ def getArgumentType(fn_name, index, call_logs):
     return call_logs[fn_name][0].params[index].mytype
 
 
-def getCounts(call_logs):
-
-    # TODO: properly get length of params, specific
-    #  for all different functions
-    #  HACK: Right now just getting the length of parameters
-    #    for a single function, but we are assuming we have only
-    #    one device function called test at the moment:
-    len_params = len(call_logs["test"][0].getParams())
-
-    # counts[i] is param i's dictionary of value to count
-    counts = []
-    # list of tuples where
+def getArgCounts(call_logs):
+    # argCounts[fn_name][i] is fn_name's ith parameter's dictionary of value to count
+    argCounts = defaultdict(list)
+    # it contains lists of tuples where
     #   tuple[0] has type Counter: (param value -> count) --AND--
     #   tuple[1] has type Param list                      --AND--
-    #   tuple[2] has type dictionary: (param value -> thread_idx list) 
-    for i in xrange(len_params):
-        counts += [[Counter(), None, defaultdict(list)]]
+    #   tuple[2] has type dictionary: (param value -> thread_idx list)
 
     for fn_name in call_logs:
+
+        # initialize the argCounts for fn_name:
+        len_params = len(call_logs[fn_name][0].getParams())
+        for _ in xrange(len_params):
+            argCounts[fn_name] += [[Counter(), None, defaultdict(list)]]
+
+        # populate the argCounts for fn_name:
         for fnCallLog in call_logs[fn_name]:
             params = fnCallLog.getParams()
             for i in xrange(len(params)):
                 value = params[i].get_value()
                 caller_thread_idx = fnCallLog.getThrIdx()
-                counts[i][0][value] += 1
-                counts[i][1] = params[i]
-                counts[i][2][value] += [caller_thread_idx]
+                argCounts[fn_name][i][0][value] += 1
+                argCounts[fn_name][i][1]         = params[i]
+                argCounts[fn_name][i][2][value] += [caller_thread_idx]
 
-    return counts
+    return argCounts
 
 def initialize_gens(args_to_fix):
     """ Makes an empty dictionary of dictionaries, where the
@@ -168,8 +166,13 @@ def initialize_gens(args_to_fix):
     return arg_fixed_functions_to_gen
 
 def not_fixedArgStringGen(fn_name, args_no_fix, include_type):
+    # Check if this function has all fixed arguments
+    if fn_name not in args_no_fix:
+        return ""
+
     res = ""
     var_to_notFixedArg = args_no_fix[fn_name]
+
     for var, not_fixedArg in var_to_notFixedArg.items():
         if include_type:
             res += " " + not_fixedArg.arg_type + " " + \
@@ -217,24 +220,34 @@ def generate_arg_fixed_functions(args_to_fix, args_no_fix):
 
     return arg_fixed_functions_to_gen
 
-def generate_branching_function(fn_name, args_to_fix, args_no_fix):
-    # Function prolog: TODO: generalize the input parameters:
-    branch_function = "__device__ int branch_" + fn_name + " ( bool x , int y , int z ) {\n"
-    
-    # Switch statement to call all the seperate arg_fixed device functions:
-    branch_function += "\tswitch (x) {\n" # TODO: generalize (what do we do on multiple parameters?)
-    for arg in args_to_fix[fn_name]:
-        fixedArg = args_to_fix[fn_name][arg]
-        for val, cnt, _ in fixedArg.arg_values:
-            branch_function += "\t\tcase " + str(val) + ":\n" + \
-                "\t\t\treturn " + fn_name + "_" + arg + "_" + str(val) + \
-                " ( " + not_fixedArgStringGen(fn_name, args_no_fix, 0) + " ) " + ";\n"
+def branch_args_string_gen(branch_args, fn_name):
+    res = ""
+    for param in branch_args[fn_name]:
+        typ, arg = param.get_type(), param.get_name()
+        res += " " + typ + " " + arg + " ,"
+    return res[:-1]
 
-    # Failure case and function epilog:
-    branch_function += "\t}\n\tint *asdffdsa12344321 = NULL;\n\t" + \
-                       "return " + "(int) " + "*asdffdsa12344321;" + "\n}"
 
-    return branch_function
+def generate_branching_functions(branch_args, args_to_fix, args_no_fix):
+    branch_functions = {}
+    for fn_name in args_to_fix:
+        # Function prolog: TODO: generalize the input parameters:
+        branch_functions[fn_name] = "__device__ int branch_" + fn_name + " ( " + branch_args_string_gen(branch_args, fn_name) + " ) {\n"
+        
+        # Switch statement to call all the seperate arg_fixed device functions:
+        branch_functions[fn_name] += "\tswitch (" + args_to_fix[fn_name] + ") {\n" # TODO: generalize (what do we do on multiple parameters?)
+        for arg in args_to_fix[fn_name]:
+            fixedArg = args_to_fix[fn_name][arg]
+            for val, cnt, _ in fixedArg.arg_values:
+                branch_functions[fn_name] += "\t\tcase " + str(val) + ":\n" + \
+                    "\t\t\treturn " + fn_name + "_" + arg + "_" + str(val) + \
+                    " ( " + not_fixedArgStringGen(fn_name, args_no_fix, 0) + " ) " + ";\n"
+
+        # Failure case and function epilog:
+        branch_functions[fn_name] += "\t}\n\tint *asdffdsa12344321 = NULL;\n\t" + \
+                           "return " + "(int) " + "*asdffdsa12344321;" + "\n}"
+
+    return branch_functions
 
 def generate_warp_rescheduler(args_to_fix):
     # Generate list of lists, where each inner list is a group
@@ -292,6 +305,8 @@ def analyze(fname):
 
     # Parse the call log file into a List of FnCallLog objects:
     call_logs = parseCallLogFile(fname)
+    # TODO: make pretty printer for call_logs
+    #print dwr_util.pprint_call_logs(call_logs)
 
     # e.g.
     #   [Counter({'1': 32, '0': 32}),
@@ -300,60 +315,58 @@ def analyze(fname):
     # meaning: argument 0 is called with 1 32 times and 0 32 times
     #          argument 1 is called with 11 5 times, 10 5 times, etc...
     #          argument 2 is called with 0 10 times, 1 9 times, etc...
-    argCounts = getCounts(call_logs)
+    argCounts = getArgCounts(call_logs)
+    #print dwr_util.pprint_argCounts(argCounts)
 
-    # The following prints out the call log:
-    """
-    for fn_name, calllogs in call_logs.items():
-        print fn_name
-        for cl in calllogs:
-            print cl
-    """
-    # The following prints out the per argument value count:
-    #print argCounts
-
-    fn_name = "test"
     num_argfixed_fns = Counter() # Not used at the moment
     args_to_fix = {} # per function args to fix
     args_no_fix = {} # per function args not to fix
+    branch_args = defaultdict(list)
     MIN_THRESHOLD = 0.45
-    # Iterate over all Counter objects:
-    for i in xrange(len(argCounts)):
-        arg_counter = argCounts[i][0]
+    for fn_name in argCounts:
+        fn_argCounts = argCounts[fn_name]
+        # Iterate over all Counter objects:
+        for i in xrange(len(fn_argCounts)):
+            arg_counter = fn_argCounts[i][0]
 
-        thr_indices = argCounts[i][2] # dictionary from ArgValue to thr_idx list
-        total = float(sum(arg_counter.values())) # total of all counts
-        # Iterate over all (argument, argument count) pairs:
-        for arg_value, count in arg_counter.items():
-            arg_name = getArgumentName(fn_name, i, call_logs)
-            arg_type = getArgumentType(fn_name, i, call_logs)
-            if count / total >= MIN_THRESHOLD:
-                if fn_name not in args_to_fix:
-                    args_to_fix[fn_name] = {}
+            thr_indices = fn_argCounts[i][2] # dictionary from ArgValue to thr_idx list
+            total = float(sum(arg_counter.values())) # total of all counts
+            # Iterate over all (argument, argument count) pairs:
+            for arg_value, count in arg_counter.items():
+                arg_name = getArgumentName(fn_name, i, call_logs)
+                arg_type = getArgumentType(fn_name, i, call_logs)
+                if count / total >= MIN_THRESHOLD:
+                    if fn_name not in args_to_fix:
+                        args_to_fix[fn_name] = {}
 
-                if arg_name not in args_to_fix[fn_name]:
-                    fixedArg = FixedArgument(fn_name, i, arg_name, arg_type)
-                    args_to_fix[fn_name][arg_name] = fixedArg
+                    if arg_name not in args_to_fix[fn_name]:
+                        fixedArg = FixedArgument(fn_name, i, arg_name, arg_type)
+                        args_to_fix[fn_name][arg_name] = fixedArg
 
-                args_to_fix[fn_name][arg_name].addValue(arg_value, count, thr_indices[arg_value])
-                num_argfixed_fns[fn_name] += 1
-            else:
-                # TODO: add to nonfixed arguments list
-                if fn_name not in args_no_fix:
-                    args_no_fix[fn_name] = {}
-                if arg_name not in args_no_fix[fn_name]:
-                    not_fixedArg = NotFixedArgument(fn_name, i, arg_name, arg_type)
-                    args_no_fix[fn_name][arg_name] = not_fixedArg
-                assert(args_no_fix[fn_name][arg_name].arg_name == arg_name)
-                assert(args_no_fix[fn_name][arg_name].fn_name == fn_name)
-                assert(args_no_fix[fn_name][arg_name].arg_type == arg_type)
+                    args_to_fix[fn_name][arg_name].addValue(arg_value, count, thr_indices[arg_value])
+                    num_argfixed_fns[fn_name] += 1
+                else:
+                    # TODO: add to nonfixed arguments list
+                    if fn_name not in args_no_fix:
+                        args_no_fix[fn_name] = {}
+                    if arg_name not in args_no_fix[fn_name]:
+                        not_fixedArg = NotFixedArgument(fn_name, i, arg_name, arg_type)
+                        args_no_fix[fn_name][arg_name] = not_fixedArg
+                    assert(args_no_fix[fn_name][arg_name].arg_name == arg_name)
+                    assert(args_no_fix[fn_name][arg_name].fn_name == fn_name)
+                    assert(args_no_fix[fn_name][arg_name].arg_type == arg_type)
+
+            # branch arguments
+            param_to_fn = fn_argCounts[i][1]
+            branch_args[fn_name] += [param_to_fn]
+
 
     print "Arguments not to fix:"
     print args_no_fix
 
     warp_rescheduler = generate_warp_rescheduler(args_to_fix)
     arg_fixed_functions = generate_arg_fixed_functions(args_to_fix, args_no_fix)
-    branch_function = generate_branching_function(fn_name, args_to_fix, args_no_fix)
+    branch_functions = generate_branching_functions(branch_args, args_to_fix, args_no_fix)
 
     print "Arguments to fix:"
     print args_to_fix
@@ -362,9 +375,11 @@ def analyze(fname):
     print "Argfixed functions:"
     print arg_fixed_functions
     print "Branch function:"
-    print repr(branch_function)
+    for name, fn in branch_functions.items():
+        print fn
+        print "~~~~"
 
-    return branch_function, arg_fixed_functions, warp_rescheduler
+    return branch_functions, arg_fixed_functions, warp_rescheduler
 
 if __name__ == "__main__":
     if len(argv) != 2:
