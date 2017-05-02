@@ -3,7 +3,7 @@ rm -rf objs/
 mkdir objs
 
 echo -e "\e[0;49;93m" # Yellow
-echo "Creating the different versions of the cuda code"
+echo "Creating the annotated version of the cuda code"
 
 echo -e "\e[0;49;32m" # Green
 echo "Running program with annotations"
