@@ -1,4 +1,14 @@
-#define WARP_SIZE 32
+#include <thrust/device_vector.h>
+#include <thrust/sequence.h>
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <stdio.h>
+#include <iostream>
+
+#define WARP_SIZE 4
 
 /////// CREATE THE ARGUMENT MATCHING ARRAY ///////
 //////////////////////////////////////////////////
@@ -6,28 +16,27 @@
 /* Find how many arguments I share with all the other tid */
 
 __global__ void
-find_grouping(int** input, int* arg_match, int tid, int num_arg, int N) {
+find_likeness(int* input, int* likeness, int tid, int num_block, int N) {
 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    int match = 0;
     if (idx < N) {
-        for (int i = 0; i < num_arg; i++) {
-            if (input[tid][i] == input[idx][i]) {
-                match++
+        for (int i = 0; i < num_block; i++) {
+            if (input[tid*num_block+i] == input[idx*num_block+i]) {
+                likeness[idx]++;
             }
         }
-        arg_match[idx] = match;
     }
 }
 
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 
+
 //////////// MAIN ALGORITHM /////////////
 /////////////////////////////////////////
 
-void create_Graph(int** input_array, int* result_array, int N, int num_arg)
+void create_warp_map(int** input_array, int* result_array, int N, int num_block)
 {
     int totalBytes = sizeof(int) * N;
 
@@ -35,20 +44,17 @@ void create_Graph(int** input_array, int* result_array, int N, int num_arg)
     const int threadsPerBlock = 32;
     const int blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
 
-    // Device Memory
-    int* device_arg_match;    // This is for the number of argument matches
-    cudaMalloc((void**) &device_arg_match, N * sizeof(int));
+    // DEVICE MEMORY
+    int* device_likeness;    // This is for the likeness of the threads
+    cudaMalloc((void**) &device_likeness, totalBytes);
     // 2-D array of the input values
-    int** device_input_array;
-    cudaMalloc((void**)&device_input_array, N*num_arg*sizeof(int));
-    cudaMemcpy(device_input_array, input_array, N*num_arg*sizeof(int), cudaMemcpyHostToDevice);
-    // Initialize the Thrust arrays
-    thrust::device_vector<int> index(N);
-
+    int* device_input_array;
+    cudaMalloc((void**)&device_input_array, num_block*totalBytes);
+    cudaMemcpy(device_input_array, input_array, num_block*totalBytes, cudaMemcpyHostToDevice);
 
     // Host Memory
-    int* result_array; // This is the final mapping of index to warp
-    bool* visited;      // This is for if a node is already assigned a warp
+    std::vector<bool> visited(N);      // This is for if a node is already assigned a warp
+    visited.clear();
     int num_mapped = 0; // How many have been mapped
     int cur_index = 0;  // First tid in the current warp
 
@@ -60,15 +66,28 @@ void create_Graph(int** input_array, int* result_array, int N, int num_arg)
     // Until I have filled all of my output array
     while (num_mapped < N) {
 
+        printf("Made a warp\n");
+        cudaMemset(device_likeness, 0, totalBytes);
         // Find argument matches based on an index
-        find_arg_match<<blocks, threadsPerBlock>>(input_array, device_arg_match, cur_index, N);
-        cudaThreadSynchronize();
-
+        find_likeness<<<blocks, threadsPerBlock>>>(device_input_array, device_likeness, cur_index, num_block, N);
+        cudaDeviceSynchronize();
 
         // Sort the index thrust array based on the value thrust array
-        thrust::sequence(index.begin(), index.end());
-        thrust::device_ptr<int> ptr_arg_match = thrust::device_pointer_cast(arg_match);
-        thrust::sort_by_key(ptr_arg_match, ptr_arg_match + N, index);
+        thrust::device_ptr<int> index = thrust::device_malloc<int>(N);
+        thrust::sequence(index, index + N);
+
+        thrust::device_ptr<int> ptr_likeness(device_likeness);
+        thrust::sort_by_key(ptr_likeness, ptr_likeness + N, index, thrust::greater<int>());
+
+        /*
+        FOR DEBUGGING
+        thrust::host_vector<int> idx(index, index + N);
+        thrust::host_vector<int> like(ptr_likeness, ptr_likeness + N);
+
+        for (int i = 0; i < N; i++) {
+            printf("%d %d\n", idx[i], like[i]);
+        }
+        */
 
         // Loop through the sorted list of arg match and pick the best 31
         for (int i = 0; i < N; i++) {
@@ -82,7 +101,7 @@ void create_Graph(int** input_array, int* result_array, int N, int num_arg)
             }
 
             // If this warp has been filled move on
-            if (num_mapped % WARP_SIZE) {
+            if ((num_mapped % WARP_SIZE) == 0) {
                 break;
             }
         }
@@ -95,6 +114,7 @@ void create_Graph(int** input_array, int* result_array, int N, int num_arg)
                 visited[cur_index] = true;
                 result_array[num_mapped] = cur_index;
                 num_mapped++;
+                break;
             }
         }
     }
