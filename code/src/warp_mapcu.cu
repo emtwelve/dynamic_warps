@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <iostream>
 
-#define WARP_SIZE 4
+#define WARP_SIZE 32
 
 /////// CREATE THE ARGUMENT MATCHING ARRAY ///////
 //////////////////////////////////////////////////

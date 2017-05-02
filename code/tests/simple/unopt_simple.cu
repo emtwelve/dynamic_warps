@@ -10,7 +10,12 @@
 #include <driver_functions.h>
 #include "../../lib/CycleTimer.h"
 
-extern float toBW(int bytes, float sec);
+void mainCuda(int N, float* resultArray);
+
+// return GB/s
+float toBW(int bytes, float sec) {
+  return static_cast<float>(bytes) / (1024. * 1024. * 1024.) / sec;
+}
 
 __device__ int test ( bool x , int y , int z ) {
   int result = 0;
@@ -33,6 +38,16 @@ test_kernel(int N, float* result) {
     if (index < N) {
        result[index] = test(index % 2 == 0, index % 13, index % 7);
     }
+}
+
+int main(int argc, char** argv)
+{
+  int N = 64;
+
+  float* resultarray = new float[N];
+
+  mainCuda(N, resultarray);
+  return 0;
 }
 
 void
