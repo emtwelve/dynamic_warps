@@ -24,11 +24,16 @@ nvcc $1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/$1.o
 g++ -m64 -O3 -Wall -o $1 objs/$1.o -L/usr/local/cuda/lib64/ -lcudart
 ./$1
 
-#echo -e "\e[0;49;94m" # Teal
-#echo "Run optimized code"
-#nvcc opt_$1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/opt_$1.o
-#g++ -m64 -O3 -Wall -o opt_$1 objs/opt_$1.o -L/usr/local/cuda/lib64/ -lcudart
-#./opt_$1
+echo -e "\e[0;49;91m" # Red
+echo "Generating optimized code"
+./codegen_remap.py $1.cu warp.log
+
+
+echo -e "\e[0;49;94m" # Teal
+echo "Run optimized code"
+nvcc opt_$1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/opt_$1.o
+g++ -m64 -O3 -Wall -o opt_$1 objs/opt_$1.o -L/usr/local/cuda/lib64/ -lcudart
+./opt_$1
 
 tput sgr0
 

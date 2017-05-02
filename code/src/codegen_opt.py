@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # Obtain the actual branch function to write to the opt_<filename>cu.cu file,
     #   and the arg_fixed functions.
-    branch_function, arg_fixed_functions, warp_rescheduler = analyze(log_file)
+    branch_functions, arg_fixed_functions, warp_rescheduler = analyze(log_file)
     
     print "Beginning codegen_opt.py"
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
             print "Adding branching function for", fn_name
             # Add branching function after argfixed functions:
-            gen += splitKeep(branch_function, '\n')
+            gen += splitKeep(branch_functions[fn_name], '\n')
 
         else:
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         line = gen[i]
         if look_for == line[:len(look_for)]:
             # Get arg fixed fn name by parsing the ####REST_ line:
-            argfixed_fn_name = gen[i][len(gen[i])-len(look_for)-1:-1]
+            argfixed_fn_name = line.split(look_for)[1].strip() # gen[i][len(gen[i])-len(look_for)-1:-1]
             # Get original fn name by removing everything past the last two underscores: 
             fn_name = removeEnd(removeEnd(argfixed_fn_name, "_"), "_")
             # Replace placholder with the actual end-of-device-function code:
