@@ -5,3 +5,4 @@ rm anno_simple
 rm remap_warp
 rm warp.log
 rm simple
+rm opt_simple.cu

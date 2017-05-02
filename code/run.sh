@@ -26,7 +26,7 @@ g++ -m64 -O3 -Wall -o $1 objs/$1.o -L/usr/local/cuda/lib64/ -lcudart
 
 echo -e "\e[0;49;91m" # Red
 echo "Generating optimized code"
-./codegen_remap.py $1.cu warp.log
+../../src/./codegen_remap.py $1.cu warp.log > opt_simple.cu
 
 
 echo -e "\e[0;49;94m" # Teal
