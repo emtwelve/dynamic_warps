@@ -11,7 +11,7 @@ if __name__ == "__main__":
     test_fname = argv[1]
     warplog_fname = argv[2]
 
-    print "Creating optimized ", test_fname
+    #print "Creating optimized ", test_fname
     fd_test = open(test_fname, 'r')
     fd_log  = open(warplog_fname, 'r')
 
@@ -20,8 +20,8 @@ if __name__ == "__main__":
 
     prolog = \
 """
-int *host_remap = {""" + remap_array_str + """};
-int *device_remap;
+int host_remap[64] = {""" + remap_array_str + """};
+__device__ int *device_remap;
 int *remap() {
     //int *device_remap;
     cudaMemcpy(device_remap, host_remap, """ + length + """ * sizeof(int),
