@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <string>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -20,17 +21,18 @@ float toBW(int bytes, float sec) {
 __device__ int test ( bool x , int y , int z ) {
   int result = 0;
   if (x) {
-    for (int i = 0; i < 10000; i++)
+    for (int i = 0; i < 10000; i++) {
       result += y - z;
+    }
   } else {
-    for (int i = 0; i < 10000; i++)
+    for (int i = 0; i < 10000; i++) {
       result += y - z;
+    }
   }
   return result;
 }
 
-__global__ void
-test_kernel(int N, float* result) {
+__global__ void test_kernel(int N, float* result) {
     // compute overall index from position of thread in current block,
     // and given the block we are in
     int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -41,7 +43,10 @@ test_kernel(int N, float* result) {
 }
 
 int main(int argc, char** argv) {
-  int N = 64;
+  std::cout << "hi" << std::endl;
+  std::cout << argv[1] << std::endl;
+  std::cout << "bye"  << std::endl;
+  int N = atoi(argv[1]);
 
   float* resultarray = new float[N];
 
