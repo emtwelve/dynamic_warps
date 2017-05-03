@@ -40,8 +40,7 @@ test_kernel(int N, float* result) {
     }
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   int N = 64;
 
   float* resultarray = new float[N];
@@ -61,7 +60,7 @@ mainCuda(int N, float* resultarray) {
 
     float* device_result;
     cudaMalloc((void **) &device_result, N * sizeof(float));
-
+    cudaMemset((void **) &device_result, 0, N * sizeof(float));
     // start timing after allocation of device memory.
     double startTime = CycleTimer::currentSeconds();
 

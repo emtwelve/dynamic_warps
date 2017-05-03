@@ -11,7 +11,6 @@ if __name__ == "__main__":
     test_fname = argv[1]
     warplog_fname = argv[2]
 
-    #print "Creating optimized ", test_fname
     fd_test = open(test_fname, 'r')
     fd_log  = open(warplog_fname, 'r')
 
@@ -20,12 +19,11 @@ if __name__ == "__main__":
 
     prolog = \
 """
-int host_remap[64] = {""" + remap_array_str + """};
-__device__ int *device_remap;
+int host_remap[""" + length + """] = {""" + remap_array_str + """};
+__device__ volatile int device_remap[""" + length + """];
 int *remap() {
     //int *device_remap;
-    cudaMemcpy(device_remap, host_remap, """ + length + """ * sizeof(int),
-                       cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(device_remap, host_remap, """ + length + """ * sizeof(int));
     //return device_remap;
     return NULL;
 }
@@ -35,7 +33,7 @@ int *remap() {
     for i in xrange(len(lines)):
         if (i < 8): continue # ignore header comments
         if "int index" in lines[i]:
-            lines[i] += "\nint ridx = device_remap[index];\n"
+            lines[i] += "\nvolatile int ridx = device_remap[index];\n"
         elif "index" in lines[i] and "int index" not in lines[i]:
             index_split = lines[i].split("index")
             ridx_line = ""
@@ -44,6 +42,9 @@ int *remap() {
             ridx_line += index_split[j+1]
 
             lines[i] = ridx_line
+
+        if "int main(" in lines[i] or "int main (" in lines[i]:
+            lines[i] += "\nremap();\n"
 
 
 

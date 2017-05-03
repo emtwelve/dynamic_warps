@@ -9,7 +9,7 @@ echo -e "\e[0;49;32m" # Green
 echo "Running program with annotations"
 nvcc anno_$1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/anno_$1.o
 g++ -m64 -O3 -Wall -o anno_$1 objs/anno_$1.o -L/usr/local/cuda/lib64/ -lcudart
-./anno_$1 > log.csv
+./anno_$1 $3 > log.csv
 
 echo -e "\e[0;49;95m" # Pink
 echo "Creating warp remapping"
@@ -22,18 +22,20 @@ echo -e "\e[0;49;96m" # Cyan
 echo "Run unoptimized code"
 nvcc $1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/$1.o
 g++ -m64 -O3 -Wall -o $1 objs/$1.o -L/usr/local/cuda/lib64/ -lcudart
-./$1
+
+nvprof -o profile_unopt$1.nvvp -f ./$1 $3
 
 echo -e "\e[0;49;91m" # Red
 echo "Generating optimized code"
-../../src/./codegen_remap.py $1.cu warp.log > opt_$1.cu
+../../src/codegen_remap.py $1.cu warp.log > opt_$1.cu
 
 
 echo -e "\e[0;49;94m" # Teal
 echo "Run optimized code"
 nvcc opt_$1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/opt_$1.o
 g++ -m64 -O3 -Wall -o opt_$1 objs/opt_$1.o -L/usr/local/cuda/lib64/ -lcudart
-./opt_$1
+
+nvprof -o profile_opt$1.nvvp -f ./opt_$1 $3
 
 tput sgr0
 
@@ -43,3 +45,6 @@ tput sgr0
 # TO RUN MAKEFILE
 # make clean TEST=(test_name)
 # make TEST=(test_name)
+
+# To check NVIDIA GPU specs
+# nvidia-smi
