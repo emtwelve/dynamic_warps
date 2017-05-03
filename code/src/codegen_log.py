@@ -134,4 +134,5 @@ if __name__ == "__main__":
 
     fd = open("anno_" + fname, 'w')
     fd.write(gen)
+    fd.close()
 
