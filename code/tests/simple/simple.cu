@@ -43,9 +43,9 @@ __global__ void test_kernel(int N, float* result) {
 }
 
 int main(int argc, char** argv) {
-  std::cout << "hi" << std::endl;
-  std::cout << argv[1] << std::endl;
-  std::cout << "bye"  << std::endl;
+  //std::cout << "hi" << std::endl;
+  //std::cout << argv[1] << std::endl;
+  //std::cout << "bye"  << std::endl;
   int N = atoi(argv[1]);
 
   float* resultarray = new float[N];
@@ -65,13 +65,14 @@ mainCuda(int N, float* resultarray) {
 
     float* device_result;
     cudaMalloc((void **) &device_result, N * sizeof(float));
-    cudaMemset((void **) &device_result, 0, N * sizeof(float));
     // start timing after allocation of device memory.
     double startTime = CycleTimer::currentSeconds();
 
     //cudaMemcpy(device_x, xarray, N * sizeof(float),
     //           cudaMemcpyHostToDevice);
 
+    size_t sz = 1048576 * 100;
+    cudaDeviceSetLimit(cudaLimitPrintfFifoSize, sz);
     double kernelStartTime = CycleTimer::currentSeconds();
     test_kernel<<<blocks, threadsPerBlock>>>(N, device_result);
     cudaThreadSynchronize();
@@ -92,10 +93,12 @@ mainCuda(int N, float* resultarray) {
     double overallDuration = endTime - startTime;
     printf("Overall time: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, toBW(totalBytes, overallDuration));
 
+    /*
     std::cout << "{ ";
     for (int i = 0; i < N; i++) {
         std::cout << resultarray[i] << ", ";
     } std::cout << " }" << std::endl;
+    */
 
     cudaFree(device_result);
 }

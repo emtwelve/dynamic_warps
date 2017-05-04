@@ -12,7 +12,7 @@ int* warp_map(std::string filename, int num_block, int N) {
 
     // Use the log file to populate the input vector
     io::CSVReader<2> in(filename);
-    in.read_header(io::ignore_extra_column, "tid", "bb");
+    in.set_header("tid","bb");
     int tid, bb;
     while(in.read_row(tid,bb)){
         input_array[tid][bb]++;

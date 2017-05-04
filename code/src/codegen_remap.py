@@ -62,7 +62,7 @@ int *remap() {
     """
 
 
-    #print prolog + ''.join(lines)
+    print prolog + ''.join(lines)
     # Get device function names
     """
     device_fn_names = []

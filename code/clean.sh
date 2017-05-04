@@ -3,12 +3,14 @@ rm -rf objs/
 
 #Remove the generated files
 rm opt_$1.cu
+rm anno_$1.cu
 
 #Remove the log files
 rm log.csv
-rm anno_simple
-rm anno_simple.cu
 rm warp.log
+rm num_bbs
+rm anno.log
+rm log
 
 # Remove the executables
 rm remap_warp
