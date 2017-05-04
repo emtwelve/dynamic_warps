@@ -81,6 +81,7 @@ def add_thread_basicblock_loggers(fd):
     # Firstly, find all global and device "{"'s
     #           and all for    and while  "{"'s:
     fnLbrackets = []
+    loopLbrackets = set([])
     for line in source.split('\n'):
         if "__device__" in line or "__global__" in line:
             # Get index of line in entire source:
@@ -88,6 +89,8 @@ def add_thread_basicblock_loggers(fd):
             # Get location of function's basic block left bracket
             fnLbracketIdx = offset + line.find("{")
             fnLbrackets.append(fnLbracketIdx)
+        if " for " in line or " while " in line:
+            loopLbrackets.add(source.find(line) + line.find("{"))
 
     # Get matching parens
     all_matching_brackets = find_parens(source)
@@ -99,14 +102,13 @@ def add_thread_basicblock_loggers(fd):
 
         for subLbracket in all_matching_brackets:
             if (fnLbracket < subLbracket and
-                subLbracket < fnRbracket):
+                subLbracket < fnRbracket and subLbracket not in loopLbrackets):
                 allLbrackets.append(subLbracket)
     allLbrackets = sorted(allLbrackets)
 
     # Insert the logging statements:
     parts = [source[i:j] for i,j in zip(allLbrackets,
                                    allLbrackets[1:]+[None])]
-    print parts
     for i in xrange(len(parts)):
         parts[i] = "{ BBLOG(" + str(i) + ");\n" + parts[i][1:]
 
@@ -136,4 +138,3 @@ if __name__ == "__main__":
     fd = open("anno_" + fname, 'w')
     fd.write(gen)
     fd.close()
-
