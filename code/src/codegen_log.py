@@ -78,7 +78,8 @@ def add_thread_basicblock_loggers(fd):
 
     prolog = '#define BBLOG(bbid) printf("%d,%d\\n", blockIdx.x * blockDim.x + threadIdx.x, bbid)\n'
 
-    # Firstly, find all global and device "{"'s:
+    # Firstly, find all global and device "{"'s
+    #           and all for    and while  "{"'s:
     fnLbrackets = []
     for line in source.split('\n'):
         if "__device__" in line or "__global__" in line:
