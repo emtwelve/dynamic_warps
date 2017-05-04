@@ -48,18 +48,15 @@ int *remap() {
             lines[i] += "\nremap();\n"
 
     # Method 2 code to add.  --Not done--
-    """
+    def getSecondArg(fnDef): return fnDef.split(',')[1]
+    def removeCastingTok(s): return s if ')' not in hostArrayArg \
+                                      else s.split(')')[-1]
     source = fd_test.read()
     lines = source.split('\n')
     for i in xrange(len(lines)):
         if "cudaHostGetDevicePointer" in line:
-            commaSplit = line.split(',')
-            hostArrayArg = commaSplit[1]
-            if ')' in hostArrayArg:
-                hostArray = hostArrayArg.split(')')[-1]
-            hostArray = hostArray.strip()
-            #print "YOYOYOYOYOY", hostArray
-    """
+            hostArray = removeCastingTok(getSecondArg(line)).strip()
+            print "YOYOYOYOYOY", hostArray
 
 
     print prolog + ''.join(lines)
