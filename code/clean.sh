@@ -11,6 +11,7 @@ rm warp.log
 rm num_bbs
 rm anno.log
 rm log
+rm make.log
 
 # Remove the executables
 rm remap_warp
