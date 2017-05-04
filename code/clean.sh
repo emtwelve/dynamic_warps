@@ -13,3 +13,6 @@ rm remap_warp
 rm $1
 rm opt_$1
 rm anno_$1
+
+#Remove profiles
+rm profile_*

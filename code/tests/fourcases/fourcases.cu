@@ -18,19 +18,7 @@ extern float toBW(int bytes, float sec);
 __device__ int test ( int x , int y , int z ) {
   int result = 0;
   if (x == 0) {
-<<<<<<< HEAD:code/tests/fourcases/fourcases.cu
-    for (int i = 0; i < 10000; i++)
-      result += y - z;
-  } else if (x == 1) {
-    for (int i = 0; i < 10000; i++)
-      result += y + z;
-  } else if (x == 2) {
-    for (int i = 0; i < 10000; i++)
-      result += y * z;
-  } else {
-    for (int i = 0; i < 10000; i++)
-=======
-    for (int i = 0; i < 1000000; i++)
+   for (int i = 0; i < 1000000; i++)
       result += y - z;
   } else if (x == 1) {
     for (int i = 0; i < 1000000; i++)
@@ -40,7 +28,6 @@ __device__ int test ( int x , int y , int z ) {
       result += y * z;
   } else {
     for (int i = 0; i < 1000000; i++)
->>>>>>> 046f3e2357ae5d625cbe41cd94ef940ec1ed40c4:code/tests/fourcases/fourcases.cu
       result += y / z;
   }
   return result;
@@ -95,19 +82,10 @@ mainCuda(int N, float* resultarray) {
     double overallDuration = endTime - startTime;
     printf("Overall time: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, toBW(totalBytes, overallDuration));
 
-<<<<<<< HEAD:code/tests/fourcases/fourcases.cu
-    /*
-    std::cout << "{ ";
-    for (int i = 0; i < N; i++) {
-        std::cout << resultarray[i] << ", ";
-    } std::cout << " }" << std::endl;
-    */
-=======
-    //std::cout << "{ ";
+   //std::cout << "{ ";
     //for (int i = 0; i < N; i++) {
     //    std::cout << resultarray[i] << ", ";
     //} std::cout << " }" << std::endl;
->>>>>>> 046f3e2357ae5d625cbe41cd94ef940ec1ed40c4:code/tests/fourcases/fourcases.cu
 
     cudaFree(device_result);
 }
@@ -121,11 +99,7 @@ void mainCuda(int N, float* result);
 
 int main(int argc, char** argv) {
 
-<<<<<<< HEAD:code/tests/fourcases/fourcases.cu
-    int N = 1024;
-=======
     int N = std::atoi(argv[1]); //1024;
->>>>>>> 046f3e2357ae5d625cbe41cd94ef940ec1ed40c4:code/tests/fourcases/fourcases.cu
 
     float* resultarray = new float[N];
 

@@ -23,7 +23,7 @@ echo "Run unoptimized code"
 nvcc $1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/$1.o
 g++ -m64 -O3 -Wall -o $1 objs/$1.o -L/usr/local/cuda/lib64/ -lcudart
 
-nvprof -o profile_unopt$1.nvvp -f ./$1 $3
+nvprof --analysis-metrics -o profile_unopt$1.nvvp -f ./$1 $3
 
 echo -e "\e[0;49;91m" # Red
 echo "Generating optimized code"
@@ -35,7 +35,7 @@ echo "Run optimized code"
 nvcc opt_$1.cu -O3 -m64 --gpu-architecture compute_35 -c -o objs/opt_$1.o
 g++ -m64 -O3 -Wall -o opt_$1 objs/opt_$1.o -L/usr/local/cuda/lib64/ -lcudart
 
-nvprof -o profile_opt$1.nvvp -f ./opt_$1 $3
+nvprof --analysis-metrics -o profile_opt$1.nvvp -f ./opt_$1 $3
 
 tput sgr0
 
