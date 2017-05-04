@@ -6,6 +6,8 @@ rm opt_$1.cu
 
 #Remove the log files
 rm log.csv
+rm anno_simple
+rm anno_simple.cu
 rm warp.log
 
 # Remove the executables

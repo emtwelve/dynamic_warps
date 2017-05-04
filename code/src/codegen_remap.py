@@ -29,6 +29,7 @@ int *remap() {
 }
 """
 
+    # Add remap index ridx and replace all instances of index with ridx:
     lines = fd_test.readlines()
     for i in xrange(len(lines)):
         if (i < 8): continue # ignore header comments
@@ -46,9 +47,22 @@ int *remap() {
         if "int main(" in lines[i] or "int main (" in lines[i]:
             lines[i] += "\nremap();\n"
 
+    # Method 2 code to add.  --Not done--
+    """
+    source = fd_test.read()
+    lines = source.split('\n')
+    for i in xrange(len(lines)):
+        if "cudaHostGetDevicePointer" in line:
+            commaSplit = line.split(',')
+            hostArrayArg = commaSplit[1]
+            if ')' in hostArrayArg:
+                hostArray = hostArrayArg.split(')')[-1]
+            hostArray = hostArray.strip()
+            #print "YOYOYOYOYOY", hostArray
+    """
 
 
-    print prolog + ''.join(lines)
+    #print prolog + ''.join(lines)
     # Get device function names
     """
     device_fn_names = []
