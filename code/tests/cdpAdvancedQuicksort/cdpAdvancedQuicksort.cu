@@ -53,16 +53,18 @@ static __device__ __forceinline__ unsigned int __qsflo(unsigned int word)
 //
 ////////////////////////////////////////////////////////////////////////////////
 template< typename T >
-static __device__ T *ringbufAlloc(qsortRingbuf *ringbuf)
-{
+static __device__ T *ringbufAlloc(qsortRingbuf *ringbuf) {
     // Wait for there to be space in the ring buffer. We'll retry only a fixed
     // number of times and then fail, to avoid an out-of-memory deadlock.
     unsigned int loop = 10000;
 
-    while (((ringbuf->head - ringbuf->tail) >= ringbuf->stacksize) && (loop-- > 0));
+    while (((ringbuf->head - ringbuf->tail) >= ringbuf->stacksize) && (loop-- > 0)) {
+        continue;
+    }
 
-    if (loop == 0)
+    if (loop == 0) {
         return NULL;
+    }
 
     // Note that the element includes a little index book-keeping, for freeing later.
     unsigned int index = atomicAdd((unsigned int *) &ringbuf->head, 1);
@@ -82,17 +84,19 @@ static __device__ T *ringbufAlloc(qsortRingbuf *ringbuf)
 //
 ////////////////////////////////////////////////////////////////////////////////
 template< typename T >
-static __device__ void ringbufFree(qsortRingbuf *ringbuf, T *data)
-{
+static __device__ void ringbufFree(qsortRingbuf *ringbuf, T *data) {
     unsigned int index = data->index;       // Non-wrapped index to free
     unsigned int count = atomicAdd((unsigned int *)&(ringbuf->count), 1) + 1;
     unsigned int max = atomicMax((unsigned int *)&(ringbuf->max), index + 1);
 
     // Update the tail if need be. Note we update "max" to be the new value in ringbuf->max
-    if (max < (index+1)) max = index+1;
+    if (max < (index+1)) {
+        max = index+1;
+    }
 
-    if (max == count)
+    if (max == count) {
         atomicMax((unsigned int *)&(ringbuf->tail), count);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,23 +115,16 @@ static __device__ void ringbufFree(qsortRingbuf *ringbuf, T *data)
 //  and cover the instruction overhead.
 //
 ////////////////////////////////////////////////////////////////////////////////
-__global__ void qsort_warp(unsigned *indata,
-                           unsigned *outdata,
-                           unsigned int offset,
-                           unsigned int len,
-                           qsortAtomicData *atomicData,
-                           qsortRingbuf *atomicDataStack,
-                           unsigned int source_is_indata,
-                           unsigned int depth)
-{
+__global__ void qsort_warp(unsigned *indata, unsigned *outdata, unsigned int offset, unsigned int len, qsortAtomicData *atomicData, qsortRingbuf *atomicDataStack, unsigned int source_is_indata,unsigned int depth) {
     // Find my data offset, based on warp ID
     unsigned int thread_id = threadIdx.x + (blockIdx.x << QSORT_BLOCKSIZE_SHIFT);
     //unsigned int warp_id = threadIdx.x >> 5;   // Used for debug only
     unsigned int lane_id = threadIdx.x & (warpSize-1);
 
     // Exit if I'm outside the range of sort to be done
-    if (thread_id >= len)
+    if (thread_id >= len) {
         return;
+    }
 
     //
     // First part of the algorithm. Each warp counts the number of elements that are
@@ -147,8 +144,7 @@ __global__ void qsort_warp(unsigned *indata,
     unsigned int greater = (data > pivot);
     unsigned int gt_mask = __ballot(greater);
 
-    if (gt_mask == 0)
-    {
+    if (gt_mask == 0) {
         greater = (data >= pivot);
         gt_mask = __ballot(greater);    // Must re-ballot for adjusted comparator
     }
@@ -160,13 +156,13 @@ __global__ void qsort_warp(unsigned *indata,
     // Atomically adjust the lt_ and gt_offsets by this amount. Only one thread need do this. Share the result using shfl
     unsigned int lt_offset, gt_offset;
 
-    if (lane_id == 0)
-    {
-        if (lt_count > 0)
+    if (lane_id == 0) {
+        if (lt_count > 0) {
             lt_offset = atomicAdd((unsigned int *) &atomicData->lt_offset, lt_count);
-
-        if (gt_count > 0)
+        }
+        if (gt_count > 0) {
             gt_offset = len - (atomicAdd((unsigned int *) &atomicData->gt_offset, gt_count) + gt_count);
+        }
     }
 
     lt_offset = __shfl((int)lt_offset, 0);   // Everyone pulls the offsets from lane 0
@@ -189,13 +185,11 @@ __global__ void qsort_warp(unsigned *indata,
 
     // Count up if we're the last warp in. If so, then Kepler will launch the next
     // set of sorts directly from here.
-    if (lane_id == 0)
-    {
+    if (lane_id == 0) {
         // Count "elements written". If I wrote the last one, then trigger the next qsorts
         unsigned int mycount = lt_count + gt_count;
 
-        if (atomicAdd((unsigned int *) &atomicData->sorted_count, mycount) + mycount == len)
-        {
+        if (atomicAdd((unsigned int *) &atomicData->sorted_count, mycount) + mycount == len) {
             // We're the last warp to do any sorting. Therefore it's up to us to launch the next stage.
             unsigned int lt_len = atomicData->lt_offset;
             unsigned int gt_len = atomicData->gt_offset;
@@ -210,41 +204,35 @@ __global__ void qsort_warp(unsigned *indata,
 
             // Exceptional case: if "lt_len" is zero, then all values in the batch
             // are equal. We are then done (may need to copy into correct buffer, though)
-            if (lt_len == 0)
-            {
-                if (source_is_indata)
+            if (lt_len == 0) {
+                if (source_is_indata) {
                     cudaMemcpyAsync(indata+offset, outdata+offset, gt_len*sizeof(unsigned), cudaMemcpyDeviceToDevice, lstream);
-
+                }
                 return;
             }
 
             // Start with lower half first
-            if (lt_len > BITONICSORT_LEN)
-            {
+            if (lt_len > BITONICSORT_LEN) {
                 // If we've exceeded maximum depth, fall through to backup big_bitonicsort
-                if (depth >= QSORT_MAXDEPTH)
-                {
+                if (depth >= QSORT_MAXDEPTH) {
                     // The final bitonic stage sorts in-place in "outdata". We therefore
                     // re-use "indata" as the out-of-range tracking buffer. For (2^n)+1
                     // elements we need (2^(n+1)) bytes of oor buffer. The backup qsort
                     // buffer is at least this large when sizeof(QTYPE) >= 2.
                     big_bitonicsort<<< 1, BITONICSORT_LEN, 0, lstream >>>(outdata, source_is_indata ? indata : outdata, indata, offset, lt_len);
                 }
-                else
-                {
+                else {
                     // Launch another quicksort. We need to allocate more storage for the atomic data.
-                    if ((atomicData = ringbufAlloc<qsortAtomicData>(atomicDataStack)) == NULL)
+                    if ((atomicData = ringbufAlloc<qsortAtomicData>(atomicDataStack)) == NULL) {
                         printf("Stack-allocation error. Failing left child launch.\n");
-                    else
-                    {
+                    } else {
                         atomicData->lt_offset = atomicData->gt_offset = atomicData->sorted_count = 0;
                         unsigned int numblocks = (unsigned int)(lt_len+(QSORT_BLOCKSIZE-1)) >> QSORT_BLOCKSIZE_SHIFT;
                         qsort_warp<<< numblocks, QSORT_BLOCKSIZE, 0, lstream >>>(outdata, indata, offset, lt_len, atomicData, atomicDataStack, !source_is_indata, depth+1);
                     }
                 }
             }
-            else if (lt_len > 1)
-            {
+            else if (lt_len > 1) {
                 // Final stage uses a bitonic sort instead. It's important to
                 // make sure the final stage ends up in the correct (original) buffer.
                 // We launch the smallest power-of-2 number of threads that we can.
@@ -253,42 +241,40 @@ __global__ void qsort_warp(unsigned *indata,
             }
             // Finally, if we sorted just one single element, we must still make
             // sure that it winds up in the correct place.
-            else if (source_is_indata && (lt_len == 1))
+            else if (source_is_indata && (lt_len == 1)) {
                 indata[offset] = outdata[offset];
-
-            if (cudaPeekAtLastError() != cudaSuccess)
+            }
+            if (cudaPeekAtLastError() != cudaSuccess) {
                 printf("Left-side launch fail: %s\n", cudaGetErrorString(cudaGetLastError()));
-
+            }
 
             // Now the upper half.
-            if (gt_len > BITONICSORT_LEN)
-            {
+            if (gt_len > BITONICSORT_LEN) {
                 // If we've exceeded maximum depth, fall through to backup big_bitonicsort
-                if (depth >= QSORT_MAXDEPTH)
+                if (depth >= QSORT_MAXDEPTH) {
                     big_bitonicsort<<< 1, BITONICSORT_LEN, 0, rstream >>>(outdata, source_is_indata ? indata : outdata, indata, offset+lt_len, gt_len);
-                else
-                {
+                } else {
                     // Allocate new atomic storage for this launch
-                    if ((atomicData = ringbufAlloc<qsortAtomicData>(atomicDataStack)) == NULL)
+                    if ((atomicData = ringbufAlloc<qsortAtomicData>(atomicDataStack)) == NULL) {
                         printf("Stack allocation error! Failing right-side launch.\n");
-                    else
-                    {
+                    }
+                    else {
                         atomicData->lt_offset = atomicData->gt_offset = atomicData->sorted_count = 0;
                         unsigned int numblocks = (unsigned int)(gt_len+(QSORT_BLOCKSIZE-1)) >> QSORT_BLOCKSIZE_SHIFT;
                         qsort_warp<<< numblocks, QSORT_BLOCKSIZE, 0, rstream >>>(outdata, indata, offset+lt_len, gt_len, atomicData, atomicDataStack, !source_is_indata, depth+1);
                     }
                 }
             }
-            else if (gt_len > 1)
-            {
+            else if (gt_len > 1) {
                 unsigned int bitonic_len = 1 << (__qsflo(gt_len-1U)+1);
                 bitonicsort<<< 1, bitonic_len, 0, rstream >>>(outdata, source_is_indata ? indata : outdata, offset+lt_len, gt_len);
-            }
-            else if (source_is_indata && (gt_len == 1))
+            } else if (source_is_indata && (gt_len == 1)) {
                 indata[offset+lt_len] = outdata[offset+lt_len];
+            }
 
-            if (cudaPeekAtLastError() != cudaSuccess)
+            if (cudaPeekAtLastError() != cudaSuccess) {
                 printf("Right-side launch fail: %s\n", cudaGetErrorString(cudaGetLastError()));
+            }
         }
     }
 }

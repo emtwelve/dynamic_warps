@@ -18,26 +18,23 @@ extern float toBW(int bytes, float sec);
 __device__ int test ( int x , int y , int z ) {
   int result = 0;
   if (x == 0) {
-   for (int i = 0; i < 1000000; i++) {
+   for (int i = 0; i < 1000000; i++)
       result += y - z;
-    }
   } else if (x == 1) {
-    for (int j = 0; j < 1000000; j++) {
+    for (int i = 0; i < 1000000; i++)
       result += y + z;
-    }
   } else if (x == 2) {
-    for (int k = 0; k < 1000000; k++) {
+    for (int i = 0; i < 1000000; i++)
       result += y * z;
-    }
   } else {
-    for (int l = 0; l < 1000000; l++) {
+    for (int i = 0; i < 1000000; i++)
       result += y / z;
-    }
   }
   return result;
 }
 
-__global__ void test_kernel(int N, float* result) {
+__global__ void
+test_kernel(int N, float* result) {
     // compute overall index from position of thread in current block,
     // and given the block we are in
     int index = blockIdx.x * blockDim.x + threadIdx.x;
