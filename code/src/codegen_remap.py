@@ -34,7 +34,7 @@ int *remap() {
     for i in xrange(len(lines)):
         if (i < 8): continue # ignore header comments
         if "int index" in lines[i]:
-            lines[i] += "\nvolatile int ridx = device_remap[index];\n"
+            lines[i] += "\nint ridx = device_remap[index];\n"
         elif "index" in lines[i] and "int index" not in lines[i]:
             index_split = lines[i].split("index")
             ridx_line = ""
@@ -47,6 +47,7 @@ int *remap() {
         if "int main(" in lines[i] or "int main (" in lines[i]:
             lines[i] += "\nremap();\n"
 
+    """
     # Method 2 code to add.  --Not done--
     def getSecondArg(fnDef): return fnDef.split(',')[1]
     def removeCastingTok(s): return s if ')' not in hostArrayArg \
@@ -54,9 +55,10 @@ int *remap() {
     source = fd_test.read()
     lines = source.split('\n')
     for i in xrange(len(lines)):
-        if "cudaHostGetDevicePointer" in line:
+        if "cudaHostGetDevicePointer" in lines[i]:
             hostArray = removeCastingTok(getSecondArg(line)).strip()
             print "YOYOYOYOYOY", hostArray
+    """
 
 
     print prolog + ''.join(lines)
